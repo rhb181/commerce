@@ -17,7 +17,7 @@ class Listing(models.Model):
     starting_bid = models.DecimalField(max_digits=5, decimal_places=2)
     image_url = models.CharField(max_length=1000)
     isActive = models.BooleanField(default=True)
-    listed_by = models.ForeignKey(User,on_delete=models.CASCADE, related_name="user")
+    listed_by = models.ForeignKey(User,on_delete=models.CASCADE, related_name="listings")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True, related_name="category")
     
     def __str__(self):
