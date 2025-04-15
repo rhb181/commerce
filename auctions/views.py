@@ -10,7 +10,28 @@ from .models import User, Listing, Category, Bid
 def index(request):
     return render(request, "auctions/index.html")
 
-
+@login_required
+def create(request):
+    if request.method == "POST":
+        l = Listing(title = request.POST["title"], 
+                    description = request.POST["description"],
+                    starting_bid = request.POST["starting_bid"],
+                    image_url = request.POST["image_url"],
+                    isActive = is_active in request.POST,
+                    listed_by = request.POST["user"],
+                    category = request.POST["category"])
+        l.save()
+        return HttpResponseRedirect(reverse("index"))
+    elif request.method == "GET":
+        categories = Category.objects.all()
+        return render(request, "auctions/create.html", {
+            "categories": categories,
+            "current_user": request.user 
+        })
+             
+    
+    
+    
 def login_view(request):
     if request.method == "POST":
 
