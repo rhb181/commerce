@@ -20,6 +20,25 @@ def listing(request, listing_id):
     return render(request, "auctions/listing.html", {
         "listing": listing
     })
+    
+@login_required(login_url="login")
+def watchlist(request, listing_id):
+    
+    #add listing to user watchlist
+    if request.method == "POST":
+        
+        #obtain listing:
+        listing = Listing.objects.get(pk=listing_id)
+        
+        #get user
+        current_user = current.user
+        
+        #add to watchlist
+        listing.watchlist.add(current_user)
+        
+    return HttpResponseRedirect(reverse("listing", args=(listing,)))
+    
+    
 
 @login_required(login_url="login")
 def create(request):

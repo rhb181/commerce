@@ -23,6 +23,10 @@ class Listing(models.Model):
     def __str__(self):
         return self.title
     
+class Watchlist(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchlist")
+    watcher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist")
+
 class Bid(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="bids")
     bidder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")  # Unique related_name
