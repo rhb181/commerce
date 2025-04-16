@@ -9,12 +9,10 @@
                 <p>{{ listing.description }}</p>
                 <img src="{{ listing.image_url }}" alt="{ listing.title }" height="200px" width="auto" id="listing_img">
                 <h4>Opening Bid: ${{ listing.starting_bid }}</h4>
-        </div>
+            </div>
         </div>
 
     {% else%}
-    <p> not found </p>
-
-        
+        <p> not found </p>    
     {% endif %}
 {% endblock %}
