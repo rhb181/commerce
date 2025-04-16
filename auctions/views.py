@@ -3,6 +3,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing, Category, Bid
 
@@ -10,20 +11,25 @@ from .models import User, Listing, Category, Bid
 def index(request):
     return render(request, "auctions/index.html")
 
-@login_required
+@login_required(login_url="login")
 def create(request):
     if request.method == "POST":
+        category_id = request.POST.get("category")
+        category = get_object_or_404(Category, id=category_id) if category_id else None
+        
         l = Listing(title = request.POST["title"], 
                     description = request.POST["description"],
                     starting_bid = request.POST["starting_bid"],
                     image_url = request.POST["image_url"],
-                    isActive = is_active in request.POST,
-                    listed_by = request.POST["user"],
-                    category = request.POST["category"])
+                    isActive = "is_active" in request.POST,
+                    listed_by = request.user,
+                    category = category)
         l.save()
         return HttpResponseRedirect(reverse("index"))
+    
     elif request.method == "GET":
         categories = Category.objects.all()
+        users = User.objects.all()
         return render(request, "auctions/create.html", {
             "categories": categories,
             "current_user": request.user 
