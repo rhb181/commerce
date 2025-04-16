@@ -10,7 +10,16 @@ from .models import User, Listing, Category, Bid
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    listings = Listing.objects.filter(isActive=True)
+    return render(request, "auctions/index.html", {
+        "listings": listings
+    })
+    
+def listing(request, listing_id):
+    listing = Listing.objects.get(id=listing_id)
+    return render(request, "auctions/listing.html", {
+        "listing": listing
+    })
 
 @login_required(login_url="login")
 def create(request):
