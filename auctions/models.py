@@ -14,7 +14,7 @@ class Category(models.Model):
 class Listing(models.Model):
     title = models.CharField(max_length=64)
     description = models.TextField(max_length=240)
-    starting_bid = models.DecimalField(max_digits=5, decimal_places=2)
+    starting_bid = models.DecimalField(max_digits=8, decimal_places=2)
     image_url = models.CharField(max_length=1000)
     isActive = models.BooleanField(default=True)
     listed_by = models.ForeignKey(User,on_delete=models.CASCADE, related_name="listings")

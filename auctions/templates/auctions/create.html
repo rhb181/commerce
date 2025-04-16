@@ -27,7 +27,7 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label for="starting_bid">Starting Bid:</label>
-                <input type="number" id="starting_bid" name="starting_bid" step="0.01" required>
+                <input type="number" class="form-control" id="starting_bid" name="starting_bid" step="0.01" min="0" max="999999.99" required>
             </div>
         </div>
     </div>
@@ -35,7 +35,7 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label for="image_url">Image URL:</label>
-                <input type="url" id="image_url" name="image_url">
+                <input type="url" class="form-control" id="image_url" name="image_url">
             </div>
         </div>
     </div>
@@ -43,7 +43,7 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label for="category">Category:</label>
-                <select id="category" name="category">
+                <select class="form-control" id="category" name="category">
                     <option value="">None</option>
                     {% for category in categories %}
                         <option value="{{ category.id }}">{{ category.name }}</option>
