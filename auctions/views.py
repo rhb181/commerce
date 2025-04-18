@@ -5,6 +5,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_list_or_404, get_object_or_404
+from django.contrib import messages
+
 
 from .models import User, Listing, Category, Bid
 
@@ -16,29 +18,65 @@ def index(request):
     })
     
 def listing(request, listing_id):
-    listing = Listing.objects.get(id=listing_id)
+    try:
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return HttpResponse("Listing not found.", status=404)
+
+    in_watchlist = listing.watchlist.filter(id=request.user.id).exists()
+    bids = Bid.objects.filter(listing=listing)
+    if bids.exists():
+        highest_bid = bids.order_by('-amount').first().amount 
+    else:
+        highest_bid = listing.starting_bid
+                
     return render(request, "auctions/listing.html", {
-        "listing": listing
+        "listing": listing,
+        "in_watchlist": in_watchlist,
+        "highest_bid": highest_bid
     })
     
 @login_required(login_url="login")
+def bid(request, listing_id):
+    
+    listing = Listing.objects.get(id=listing_id)
+    bidder = request.user
+    starting_bid = listing.starting_bid
+    bids = Bid.objects.filter(listing=listing)
+    this_bid = float(request.POST.get("bid_value"))
+    
+    if bids.exists():
+        highest_bid = bids.order_by('-amount').first().amount  # Get the highest bid amount
+    else:
+        highest_bid = starting_bid
+
+    if highest_bid < this_bid:            
+        b = Bid(listing = listing,
+                bidder = bidder,
+                amount = this_bid)
+        b.save()
+        messages.success(request, f"Your bid of ${this_bid:.2f} was successfully placed!")
+    else:
+        messages.error(request, f"Sorry..your bid must be higher than the current highest bid of ${highest_bid:.2f}.")
+    
+    return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+
+    
+@login_required(login_url="login")
 def watchlist(request, listing_id):
+    listing = get_object_or_404(Listing, id=listing_id)
     
-    #add listing to user watchlist
-    if request.method == "POST":
-        
-        #obtain listing:
-        listing = Listing.objects.get(pk=listing_id)
-        
-        #get user
-        current_user = current.user
-        
-        #add to watchlist
-        listing.watchlist.add(current_user)
-        
-    return HttpResponseRedirect(reverse("listing", args=(listing,)))
-    
-    
+    user = request.user
+
+    if user in listing.watchlist.all():
+        listing.watchlist.remove(user)
+    else:
+        listing.watchlist.add(user)
+
+    print("After:", listing.watchlist.all())  # 
+
+    return HttpResponseRedirect(reverse("listing", args=(listing.id,)))
+
 
 @login_required(login_url="login")
 def create(request):
@@ -68,8 +106,6 @@ def create(request):
             "current_user": request.user 
         })
              
-    
-    
     
 def login_view(request):
     if request.method == "POST":

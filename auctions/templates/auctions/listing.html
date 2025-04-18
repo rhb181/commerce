@@ -1,27 +1,91 @@
-{% extends "auctions/layout.html" %}
+    {% extends "auctions/layout.html" %}
+    {% block body %}
 
-{% block body %}
-    <h2>Listing: {% if listing %} {{ listing.title }}</h2>
-                <div class="row">
-                    <div class="col-md-9">
-                        <img src="{{ listing.image_url }}" alt="{ listing.title }" height="300px" width="auto" id="listing_img">
-                        <p>{{ listing.description }}</p>
-                        <h4>${{ listing.starting_bid }}</h4>
-                    </div>
+ <div class="container">
+    <div class="row">    
+        <div class="col-md-5">
+            <h2>Listing: {% if listing %} {{ listing.title }}</h2>
+        </div>
+        <div class="col-md-4">
+            {% if user.is_authenticated %}
+                <!-- remove from watchlist -->
+                {% if in_watchlist %}
+
+                <form action="{% url 'watchlist' listing_id=listing.id %}" method="POST">
+                {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-sm" id="watch-btn">Remove from Watchlist (-)</button>
+                </form>
+
+                {% else %}
+
+                <!-- remove from watchlist -->
+                <form action="{% url 'watchlist' listing_id=listing.id %}" method="POST">
+                {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm" id="watch-btn">Add to Watchlist (+)</button>
+                </form>
+                {% endif %}
+
+            {% endif %}
+        </div>
+    </div>
+        <div class="row">
+                    <img src="{{ listing.image_url }}" alt="{ listing.title }" height="300px" width="auto" id="listing_img">
+                <div class="col-md-12">
+                    <p>{{ listing.description }}</p>
                 </div>
-                
-    {% else%}
-        <p> not found </p>    
-    {% endif %}
-                <div class="row">
-                    <div class="col-md-9">
-                        <h3>BID SECTION</h3>
-                        
-                        <h4>Details</h4>
-                        <ul>
-                            <li>Listed by: <span style="color: cornflowerblue;">{{ listing.listed_by }}</span></li>
-                            <li>Category: {% if listing.category %}{{ listing.category }}{% else %}No Category Listed{% endif %}</li>
-                        </ul>
-                    </div>
+                <div class="col-md-12">
+                    <h5><span style="color:silver"> Starting Bid: ${{ listing.starting_bid }} </span>| Current Bid: ${{ highest_bid }}</h5>
+                </div>  
+            {% else%}
+                <p> not found </p>    
+                <!-- close iflisting -->
+            {% endif %}
+        </div>
+               
+        <!-- bid segment -->
+        <form action="{% url 'bid' listing_id=listing.id %}" method="POST">
+        <div class="row">
+            {% if user.is_authenticated %}
+                {% csrf_token %}
+                <div class="col-md-4">
+                        <input type="number" class="form-control" id="bid_value" name="bid_value" min="0" max="999999.99" step="0.01" required>
                 </div>
-{% endblock %}
+                <div class="col-md-4">
+                        <button type="submit" class="btn btn-success btn-md" id="bid-btn">Place Bid</button>
+                </div>
+                </form>
+
+
+            {% endif %}
+        <!-- messages -->
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                {% if "error" in message.tags %}
+                <h4 style="color: red;">{{ message }}</h4>
+            {% elif "success" in message.tags %}
+                <h4 style="color: green;">{{ message }}</h4>
+            {% else %}
+                <p>{{ message }}</p>
+            {% endif %}
+
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        </div>
+
+        <!-- details segment -->
+        <div class="row" id="details-section">
+            <div class="col-md-4">
+             <h4>Details</h4>
+                <ul>
+                    <li>Listed by: <span style="color: cornflowerblue;">{{ listing.listed_by }}</span></li>
+                    <li>Category: {% if listing.category %}{{ listing.category }}{% else %}No Category Listed{% endif %}</li>
+                </ul>
+            </div>
+        </div>
+
+ </div>
+        
+    {% endblock %}
