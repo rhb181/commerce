@@ -24,27 +24,67 @@ def listing(request, listing_id):
         return HttpResponse("Listing not found.", status=404)
 
     in_watchlist = listing.watchlist.filter(id=request.user.id).exists()
+    
+    bid_count = Bid.objects.filter(listing=listing).count()
+    
     bids = Bid.objects.filter(listing=listing)
     if bids.exists():
-        highest_bid = bids.order_by('-amount').first().amount 
+        highest_bid = bids.order_by('-amount').first()
+        highest_bid_amount = highest_bid.amount
+        highest_bidder = highest_bid.bidder 
     else:
-        highest_bid = listing.starting_bid
+        highest_bid_amount = listing.starting_bid
+        highest_bidder = None
+    
+    is_highest_bidder = False
+    if request.user.is_authenticated and highest_bidder == request.user:
+        is_highest_bidder = True
                 
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "in_watchlist": in_watchlist,
-        "highest_bid": highest_bid
+        "highest_bid_amount": highest_bid_amount,        
+        "bid_count": bid_count,
+        "higher_bidder": highest_bidder,
+        "is_highest_bidder": is_highest_bidder
     })
+    
+@login_required(login_url="login") 
+def close_listing(request, listing_id):
+    listing = get_object_or_404(Listing, id=listing_id)
+    
+    if request.user != listing.listed_by:
+        messages.error(request, "You are not authorized to close this listing.")
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    
+    bids = Bid.objects.filter(listing=listing)
+    if bids.exists():
+        highest_bid = bids.order_by('-amount').first()
+        listing.winner = highest_bid.bidder 
+        
+    listing.isActive = False
+    listing.is_closed = True
+    listing.save()
+    
+    messages.success(request, "The listing has been closed.")
+    return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    
+    
     
 @login_required(login_url="login")
 def bid(request, listing_id):
     
     listing = Listing.objects.get(id=listing_id)
+    owner = listing.listed_by
     bidder = request.user
     starting_bid = listing.starting_bid
     bids = Bid.objects.filter(listing=listing)
     this_bid = float(request.POST.get("bid_value"))
     
+    if owner == bidder:
+        messages.error(request, f"You cannot place a bid, you are the listing owner", extra_tags="error_1")
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+        
     if bids.exists():
         highest_bid = bids.order_by('-amount').first().amount  # Get the highest bid amount
     else:
@@ -57,7 +97,7 @@ def bid(request, listing_id):
         b.save()
         messages.success(request, f"Your bid of ${this_bid:.2f} was successfully placed!")
     else:
-        messages.error(request, f"Sorry..your bid must be higher than the current highest bid of ${highest_bid:.2f}.")
+        messages.error(request, f"Sorry..your bid must be higher than the current highest bid of ${highest_bid:.2f}.", extra_tags="error_2")
     
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
 

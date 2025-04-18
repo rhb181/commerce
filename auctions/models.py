@@ -17,9 +17,11 @@ class Listing(models.Model):
     starting_bid = models.DecimalField(max_digits=8, decimal_places=2)
     image_url = models.CharField(max_length=1000)
     isActive = models.BooleanField(default=True)
+    is_closed = models.BooleanField(default=False)
     listed_by = models.ForeignKey(User,on_delete=models.CASCADE, related_name="listings")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True, related_name="category")
     watchlist = models.ManyToManyField(User, blank=True, null=True, related_name="watchlist")
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_listings")
     
     def __str__(self):
         return self.title

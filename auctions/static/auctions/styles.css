@@ -27,6 +27,11 @@ body {
 #bid-btn
 {
     margin-left: 0px;
+    margin-top: auto;
+}
+
+#btn-div {
+    margin-top: 10px;
 }
 
 #bid_value {
@@ -38,6 +43,11 @@ body {
 }
 
 #details-section {
+    margin-top: 10px;
+
+}
+
+#close-btn, #watch-btn {
     margin-top: 10px;
 
 }
