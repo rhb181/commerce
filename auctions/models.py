@@ -40,5 +40,5 @@ class Comment(models.Model):
     comment = models.TextField(max_length=240)
     comment_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments" )
-    timestamp = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     

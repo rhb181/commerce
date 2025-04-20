@@ -6,9 +6,10 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.contrib import messages
+from django.db.models import Max 
 
 
-from .models import User, Listing, Category, Bid
+from .models import User, Listing, Category, Bid, Comment
 
 
 def index(request):
@@ -22,6 +23,8 @@ def listing(request, listing_id):
         listing = Listing.objects.get(id=listing_id)
     except Listing.DoesNotExist:
         return HttpResponse("Listing not found.", status=404)
+
+    comments = listing.comments.filter(listing_id=listing_id)
 
     in_watchlist = listing.watchlist.filter(id=request.user.id).exists()
     
@@ -46,9 +49,12 @@ def listing(request, listing_id):
         "highest_bid_amount": highest_bid_amount,        
         "bid_count": bid_count,
         "higher_bidder": highest_bidder,
-        "is_highest_bidder": is_highest_bidder
+        "is_highest_bidder": is_highest_bidder,
+        "comments": comments
+        
     })
-    
+        
+
 @login_required(login_url="login") 
 def close_listing(request, listing_id):
     listing = get_object_or_404(Listing, id=listing_id)
@@ -66,11 +72,10 @@ def close_listing(request, listing_id):
     listing.is_closed = True
     listing.save()
     
-    messages.success(request, "The listing has been closed.")
+    messages.success(request, "The listing has been closed.", extra_tags="success_2")
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
     
-    
-    
+
 @login_required(login_url="login")
 def bid(request, listing_id):
     
@@ -95,12 +100,20 @@ def bid(request, listing_id):
                 bidder = bidder,
                 amount = this_bid)
         b.save()
-        messages.success(request, f"Your bid of ${this_bid:.2f} was successfully placed!")
+        messages.success(request, f"Your bid of ${this_bid:.2f} was successfully placed!", extra_tags="success_1")
     else:
         messages.error(request, f"Sorry..your bid must be higher than the current highest bid of ${highest_bid:.2f}.", extra_tags="error_2")
     
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
 
+
+@login_required(login_url="login")
+def mywatchlist(request):
+    watchlist_items = Listing.objects.filter(watchlist=request.user).annotate(highest_bid=Max('bids__amount')).order_by('-isActive','-id')
+
+    return render(request, "auctions/mywatchlist.html", {
+        "listings": watchlist_items
+    })
     
 @login_required(login_url="login")
 def watchlist(request, listing_id):
@@ -145,8 +158,36 @@ def create(request):
             "categories": categories,
             "current_user": request.user 
         })
-             
-    
+
+def comment(request, listing_id):
+    if request.method == "POST":
+        listing = get_object_or_404(Listing, id=listing_id)
+        comment_text = request.POST.get("comment")
+        comment_by = request.user
+        
+        print("Listing:", listing)
+        print("Comment Text:", comment_text)
+        print("Comment By:", comment_by)
+        
+        if not comment_text.strip():
+            print("Empty comment submitted.")
+            return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+        
+        try:
+            c = Comment(comment = comment_text, 
+                        comment_by = comment_by,
+                        listing = listing)
+            c.save()
+            print("Comment saved successfully.")
+
+            return HttpResponseRedirect(reverse("comment", args=(listing_id,)))
+        except Exception as e:
+            print("Error:", e)
+            return HttpResponseRedirect(reverse("comment", args=(listing_id,)))  
+    return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+  
+        
+        
 def login_view(request):
     if request.method == "POST":
 
