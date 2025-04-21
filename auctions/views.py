@@ -186,7 +186,23 @@ def comment(request, listing_id):
             return HttpResponseRedirect(reverse("comment", args=(listing_id,)))  
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
   
+def categories(request):
+        categories = Category.objects.all()
+        return render(request, "auctions/categories.html", {
+            "categories": categories
+        })
         
+def tester(request):
+    return render(request, "auctions/tester.html")
+        
+def category_listings(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    listings = Listing.objects.filter(category=category, isActive=True)
+
+    return render(request, "auctions/category_listings.html", {
+        "category": category,
+        "listings": listings
+    })
         
 def login_view(request):
     if request.method == "POST":

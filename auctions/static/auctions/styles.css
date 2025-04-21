@@ -51,3 +51,7 @@ body {
 #win {
     color: green;
 }
+
+#active-badge {
+    padding: 8px
+}
